@@ -9,6 +9,10 @@ const styles = StyleSheet.create({
   scroll: {
     padding: 16,
   },
+  imageContainer:{
+    justifyContent: 'center', 
+    alignItems: 'center'
+  },
   gif: {
     width: '100%',
     height: 250,

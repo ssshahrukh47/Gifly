@@ -4,7 +4,9 @@ export interface Gif {
     id: string;
     title: string;
     images: {
+      downsized_medium?: { url: string };
       fixed_height?: { url: string };
+      preview_gif?: { url: string };
       fixed_width?: { url: string };
       original?: { url: string; width: string; height: string };
     };

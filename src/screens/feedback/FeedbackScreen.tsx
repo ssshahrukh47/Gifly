@@ -7,6 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  View,
+  ActivityIndicator,
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +19,7 @@ import { FeedbackData, RootStackParamList } from '../../types';
 import styles from './Styles';
 import { StarRating } from '../../components';
 import Strings from '../../res/strings';
+import { COLORS } from "../../res/themes/colors"
 
 type Props = {
   route: RouteProp<RootStackParamList, 'Feedback'>;
@@ -29,6 +32,7 @@ export const FeedbackScreen: React.FC<Props> = ({ route }) => {
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loadingImage, setLoadingImage] = useState(true);
 
   const STORAGE_KEY = `feedback_${gif.id}`;
 
@@ -69,7 +73,7 @@ export const FeedbackScreen: React.FC<Props> = ({ route }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       Alert.alert('Success', 'Your feedback has been saved!');
-      navigation.navigate('Home'); // Navigate to HomeScreen after submit
+      navigation.navigate('Home');
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to save feedback');
@@ -77,6 +81,12 @@ export const FeedbackScreen: React.FC<Props> = ({ route }) => {
       setLoading(false);
     }
   };
+
+  const imageUrl =
+    gif.images?.downsized_medium?.url ??
+    gif.images?.fixed_height?.url ??
+    gif.images?.preview_gif?.url ??
+    '';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -92,15 +102,28 @@ export const FeedbackScreen: React.FC<Props> = ({ route }) => {
             <Feather name="arrow-left" size={24} />
           </TouchableOpacity>
 
-          {/* GIF Preview */}
-          <Image
-             source={{ uri: gif.images?.original?.url ?? '' }}
-            style={styles.gif}
-            contentFit="cover"
-          />
-          <Text style={styles.title}>{gif.title || 'Untitled GIF'}</Text>
+          <View style={styles.imageContainer}>
+            {loadingImage && (
+              <ActivityIndicator
+                size="large"
+                color={COLORS.primary}
+                style={{ position: 'absolute', zIndex: 1 }}
+              />
+            )}
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.gif}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={300}
+              onLoadStart={() => setLoadingImage(true)}
+              onLoadEnd={() => setLoadingImage(false)}
+            />
+          </View>
 
-          {/* Rating */}
+          <Text style={styles.title}>{gif.title || 'Untitled GIF'}</Text>
+                
+           {/* Rating */}
           <Text style={styles.label}>
             {Strings.RATING} <Text>*</Text>
           </Text>
@@ -112,7 +135,7 @@ export const FeedbackScreen: React.FC<Props> = ({ route }) => {
             }}
           />
           {error ? <Text style={styles.error}>{error}</Text> : null}
-
+          
           {/* Comment */}
           <Text style={styles.label}>Comment (Optional)</Text>
           <TextInput
@@ -124,7 +147,7 @@ export const FeedbackScreen: React.FC<Props> = ({ route }) => {
             numberOfLines={4}
             textAlignVertical="top"
           />
-
+          
           {/* Submit Button */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
